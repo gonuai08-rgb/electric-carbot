@@ -35,9 +35,13 @@
 - [x] `index.html`에 `data/laws.json` 로더 추가 — 성공 시 조문 원문 표시, 실패 시 기존 수기 요약 폴백 (같은 도메인 정적 파일, 외부 API 호출 아님)
 - [x] 로컬 시드 실행 완료 — `public/data/laws.json` + `data/laws.json` 생성(5/5 법령 수집)
 - [x] `scripts/README.md` 작성
-- [ ] **git init + GitHub 저장소 생성·푸시** (현재 이 폴더는 git 저장소 아님)
-- [ ] GitHub 저장소: Actions Workflow permissions = Read and write 설정
-- [ ] (선택) open.law.go.kr에서 전용 OC 키 발급 후 Secret `LAW_OC` 등록 (안 하면 공용키 `test` 사용)
-- [ ] GitHub Actions에서 워크플로 1회 수동 실행해 동작 확인
-- [ ] Firebase 재배포(`public/index.html` + `public/data/laws.json` 반영)
-- [ ] 별표 21의2 표 텍스트가 페이지에서 읽을 만한지 확인 (정렬 깨지면 PDF 링크만 노출로 조정)
+- [x] git init + GitHub 저장소 생성·푸시 — https://github.com/gonuai08-rgb/electric-carbot (public), 2026-09-02
+- [x] Git 2.55 / GitHub CLI 2.98 설치, `gh auth login` + `workflow` 스코프 refresh 완료
+- [x] Actions Workflow permissions = write 설정(`gh api`)
+- [x] 워크플로 1회 실행해 동작 확인 — push 트리거 success, `laws.json` 자동 커밋(`0f6afcd`) 확인
+- [x] 동시 실행 레이스 대응 — 커밋 단계 `git pull --rebase` + 3회 재시도
+- [x] law.go.kr 해외 IP 간헐 차단 대응 — 요청 4회 재시도, 실패 시 이전 저장본 유지, 전멸 시 exit 1
+- [ ] **`firebase deploy --only hosting`** — 사용자 실행 (공개 사이트에 법령 로더 + laws.json 반영)
+- [ ] 배포 후 electronic-carbot.web.app 하단 법령 조문 표시 육안 확인
+- [ ] (선택) open.law.go.kr 전용 OC 키 발급 → Secret `LAW_OC` 등록 (안 하면 공용키 `test`)
+- [ ] 별표 21의2 표 텍스트 가독성 확인 (정렬 깨지면 PDF 링크만 노출로 조정)
