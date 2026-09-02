@@ -9,8 +9,9 @@ firebase-debug.log
 # Claude Code 로컬 설정
 .claude/settings.local.json
 
-# 일회성 GitHub 셋업 스크립트 (owner 하드코딩)
+# 일회성 로컬 셋업/배포 스크립트
 setup-github.ps1
+deploy.ps1
 
 # OS
 .DS_Store
