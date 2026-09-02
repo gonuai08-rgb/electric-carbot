@@ -309,6 +309,23 @@ async function main() {
     laws,
   };
 
+  // 실제 내용(laws·warnings)이 그대로면 fetchedAt만 바뀌어 무의미한 커밋이 생기므로 저장을 건너뛴다.
+  const substantive = JSON.stringify({ warnings: out.warnings, laws: out.laws });
+  let prev = null;
+  try {
+    prev = JSON.parse(await readFile(OUT_PATHS[0], 'utf8'));
+  } catch {
+    /* 최초 실행 */
+  }
+  if (prev && JSON.stringify({ warnings: prev.warnings ?? [], laws: prev.laws ?? [] }) === substantive) {
+    console.log('\n내용 변화 없음 — 파일을 갱신하지 않습니다.');
+    if (warnings.length) {
+      console.log('경고:');
+      for (const w of warnings) console.log('  - ' + w);
+    }
+    return;
+  }
+
   const json = JSON.stringify(out, null, 2) + '\n';
   for (const p of OUT_PATHS) {
     await mkdir(dirname(p), { recursive: true });

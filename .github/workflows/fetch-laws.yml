@@ -38,12 +38,22 @@ jobs:
 
       - name: 변경 시 커밋
         run: |
-          if [ -n "$(git status --porcelain public/data/laws.json data/laws.json)" ]; then
-            git config user.name  "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add public/data/laws.json data/laws.json
-            git commit -m "chore: 법령 데이터 갱신 (law.go.kr) [skip ci]"
-            git push
-          else
+          if [ -z "$(git status --porcelain public/data/laws.json data/laws.json)" ]; then
             echo "변경 없음 — 커밋 생략"
+            exit 0
           fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/laws.json data/laws.json
+          git commit -m "chore: 법령 데이터 갱신 (law.go.kr) [skip ci]"
+          # 동시 실행 등으로 원격이 앞서 있을 수 있으므로 rebase 후 재시도
+          for i in 1 2 3; do
+            if git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push; then
+              echo "push 완료 (시도 $i)"
+              exit 0
+            fi
+            echo "push 재시도 $i..."
+            sleep 5
+          done
+          echo "::error::push 실패"
+          exit 1
