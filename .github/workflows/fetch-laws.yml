@@ -1,0 +1,49 @@
+name: 법령 데이터 갱신 (law.go.kr → JSON)
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # 매주 월요일 00:15 UTC = 한국시간 월요일 09:15
+    - cron: "15 0 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/fetch-laws.mjs"
+      - "scripts/laws.config.json"
+      - ".github/workflows/fetch-laws.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-laws
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 법령 내려받기 (law.go.kr Open API)
+        env:
+          # open.law.go.kr 에서 발급한 전용 키가 있으면 저장소 Secret(LAW_OC)에 등록하세요.
+          # 없으면 공용 키 'test' 로 동작합니다(저사용량 한정).
+          LAW_OC: ${{ secrets.LAW_OC }}
+        run: node scripts/fetch-laws.mjs
+
+      - name: 변경 시 커밋
+        run: |
+          if [ -n "$(git status --porcelain public/data/laws.json data/laws.json)" ]; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add public/data/laws.json data/laws.json
+            git commit -m "chore: 법령 데이터 갱신 (law.go.kr) [skip ci]"
+            git push
+          else
+            echo "변경 없음 — 커밋 생략"
+          fi

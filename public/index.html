@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>부산시 전기차 민원 답변 도우미</title>
+<style>
+  :root{
+    --deep-ocean:#023047;
+    --ocean:#046488;
+    --ocean-mid:#0592b0;
+    --wave:#40b8c9;
+    --foam:#bdf2ef;
+    --eco-green:#2ec4b6;
+    --eco-lime:#8fe36b;
+    --ink:#0b2a36;
+    --paper:#ffffff;
+    --paper-soft:#f4fbfb;
+    --warn:#d64545;
+    --card-bg:#f8fdfc;
+    --ink-soft:#3a5a63;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;min-height:100%;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    color:var(--ink);
+  }
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(143,227,107,.25), transparent 45%),
+      linear-gradient(180deg, var(--deep-ocean) 0%, var(--ocean) 38%, var(--ocean-mid) 68%, var(--wave) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    padding:40px 20px 60px;
+    overflow-x:hidden;
+  }
+  .waves{
+    position:fixed;left:0;right:0;bottom:0;height:140px;z-index:0;pointer-events:none;opacity:.55;
+  }
+  .container{
+    max-width:860px;margin:0 auto;position:relative;z-index:1;
+  }
+  header.top{
+    text-align:center;color:#eafcff;margin-bottom:32px;
+  }
+  header.top .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.25);
+    padding:6px 16px;border-radius:999px;
+    font-size:13px;letter-spacing:.03em;margin-bottom:14px;
+    backdrop-filter:blur(4px);
+  }
+  header.top h1{
+    font-size:38px;margin:0 0 10px;font-weight:800;
+    text-shadow:0 2px 12px rgba(0,0,0,.25);
+    display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;
+    text-wrap:balance;
+  }
+  header.top p{
+    margin:0 auto;max-width:560px;font-size:15px;color:#d6f3f6;opacity:.9;line-height:1.6;
+  }
+  .stats{
+    display:flex;justify-content:center;gap:12px;margin-top:20px;flex-wrap:wrap;
+  }
+  .stat{
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);
+    border-radius:14px;padding:10px 22px;backdrop-filter:blur(4px);min-width:100px;
+  }
+  .stat-num{font-size:23px;font-weight:800;color:#eafcff;font-variant-numeric:tabular-nums;}
+  .stat-label{font-size:11.5px;color:#d6f3f6;letter-spacing:.02em;}
+  .layout{
+    display:grid;grid-template-columns:1fr;gap:22px;align-items:start;
+  }
+  @media (min-width:1080px){
+    .container{max-width:1180px;}
+    .layout{grid-template-columns:440px 1fr;}
+  }
+  .card{
+    background:var(--card-bg);
+    border-radius:var(--radius);
+    box-shadow:0 20px 45px rgba(2,48,71,.35), 0 2px 8px rgba(2,48,71,.15);
+    padding:32px 30px 30px 34px;
+    margin-bottom:22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .col-right .card:last-child{margin-bottom:0;}
+  .card::before{
+    content:"";position:absolute;top:0;left:0;bottom:0;width:5px;
+    background:linear-gradient(180deg, var(--eco-green), var(--wave), var(--eco-lime));
+  }
+  #preview-panel.hide{display:none;}
+  .chip-preview{cursor:default;opacity:.88;}
+  .card h2{
+    font-size:16px;margin:0 0 14px;display:flex;align-items:center;gap:8px;color:var(--deep-ocean);
+  }
+  .card h2 .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;border-radius:50%;
+    background:var(--eco-green);color:#fff;font-size:13px;font-weight:700;flex:none;
+  }
+  label{display:block;font-size:13px;font-weight:600;color:#3a5a63;margin-bottom:6px;}
+  textarea{
+    width:100%;border:1.5px solid #d3e9ec;border-radius:12px;
+    padding:12px 14px;font-size:14px;font-family:inherit;
+    background:var(--paper-soft);color:var(--ink);
+    transition:border-color .15s, box-shadow .15s;
+    resize:vertical;line-height:1.55;
+  }
+  textarea:focus{
+    outline:none;border-color:var(--eco-green);
+    box-shadow:0 0 0 3px rgba(46,196,182,.18);
+  }
+  textarea#complaint{min-height:220px;}
+  textarea#output{min-height:340px;line-height:1.75;font-size:14.5px;}
+  .hint{font-size:12px;color:#7a9aa2;margin-top:6px;line-height:1.5;}
+  button#analyze{
+    margin-top:16px;width:100%;
+    background:linear-gradient(90deg, var(--eco-green), var(--ocean-mid));
+    color:#fff;border:none;border-radius:14px;
+    padding:14px 20px;font-size:15.5px;font-weight:700;letter-spacing:.02em;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+    box-shadow:0 10px 24px rgba(5,146,176,.35);
+    transition:transform .1s ease, box-shadow .15s ease;
+  }
+  button#analyze:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(5,146,176,.45);}
+  button#analyze:active{transform:translateY(0);}
+  #match-card, #output-card{display:none;}
+  #match-card.show, #output-card.show{display:block;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .chip{
+    display:flex;align-items:center;gap:7px;
+    background:var(--paper-soft);border:1.5px solid #cdeeee;border-radius:999px;
+    padding:7px 12px 7px 10px;font-size:13px;color:var(--deep-ocean);cursor:pointer;
+    user-select:none;
+  }
+  .chip input{accent-color:var(--eco-green);}
+  .chip.unchecked{opacity:.45;text-decoration:line-through;}
+  .add-row{display:flex;gap:8px;align-items:center;margin-top:4px;}
+  select#addCategory{
+    flex:1;border:1.5px solid #d3e9ec;border-radius:10px;padding:9px 12px;
+    font-size:13.5px;background:var(--paper-soft);color:var(--ink);
+  }
+  .icon-btn{
+    background:#eafcfa;color:var(--deep-ocean);border:1px solid #cdeeee;
+    border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .icon-btn:hover{background:#d9f6f4;}
+  .output-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;}
+  .disclaimer{
+    display:flex;gap:8px;align-items:flex-start;
+    background:#fff8e6;border:1px solid #f3e2a8;border-radius:12px;
+    padding:12px 14px;font-size:12.5px;color:#8a6d1c;line-height:1.6;margin-top:14px;
+  }
+  .evor-link{
+    display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+    background:var(--deep-ocean);color:#eafcff;border-radius:10px;
+    padding:10px 16px;font-size:13px;font-weight:600;text-decoration:none;
+  }
+  .evor-link:hover{background:var(--ocean);}
+  footer.note{
+    text-align:center;color:#dcf4f6;font-size:12px;opacity:.85;line-height:1.7;margin-top:8px;
+  }
+  .law-links{
+    display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+    gap:8px;margin-top:16px;
+  }
+  .law-label{
+    width:100%;font-size:11px;color:#bfe4e8;letter-spacing:.03em;margin-bottom:4px;opacity:.9;
+    text-decoration:none;
+  }
+  .law-label:hover{opacity:1;text-decoration:underline;}
+  .law-label .highlight{color:#000000;font-weight:700;font-size:14px;}
+  .law-link{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(167,139,250,.22);border:1.5px solid rgba(196,181,253,.7);
+    color:#f1eaff;font-weight:600;border-radius:999px;padding:7px 15px;font-size:12px;
+    text-decoration:none;backdrop-filter:blur(3px);
+    transition:background .15s, border-color .15s, transform .1s;
+  }
+  .law-link:hover{background:rgba(167,139,250,.38);border-color:rgba(216,205,255,.95);transform:translateY(-1px);}
+  .law-detail{
+    background:var(--card-bg);
+    border:1px solid #d3e9ec;
+    border-radius:var(--radius);
+    box-shadow:0 14px 32px rgba(2,48,71,.30);
+    margin:26px 0 16px;overflow:hidden;
+  }
+  .law-detail>summary{
+    cursor:pointer;list-style:none;
+    padding:15px 20px;font-size:14px;font-weight:700;color:var(--deep-ocean);
+    background:#eafcfa;display:flex;align-items:center;gap:8px;
+  }
+  .law-detail>summary::-webkit-details-marker{display:none;}
+  .law-detail>summary::after{content:"▾";margin-left:auto;transition:transform .15s ease;}
+  .law-detail[open]>summary::after{transform:rotate(180deg);}
+  .law-body{padding:18px 22px 20px;font-size:13px;line-height:1.7;color:var(--ink-soft);}
+  .law-body .asof{
+    font-size:12px;color:#8a6d1c;background:#fff8e6;border:1px solid #f3e2a8;
+    border-radius:10px;padding:9px 12px;margin-bottom:16px;line-height:1.6;
+  }
+  .law-body h4{margin:18px 0 6px;font-size:13.5px;color:var(--deep-ocean);}
+  .law-body h4:first-of-type{margin-top:0;}
+  .law-body ul{margin:4px 0 0;padding-left:18px;}
+  .law-body li{margin-bottom:5px;}
+  .law-body .src{display:block;margin-top:5px;font-size:11.5px;color:#7a9aa2;}
+  .law-body .box-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
+  .law-body .box-links a{
+    display:inline-flex;align-items:center;gap:6px;
+    background:#eef6f6;border:1.5px solid #cdeeee;border-radius:999px;
+    padding:7px 14px;font-size:12px;font-weight:600;color:var(--deep-ocean);
+    text-decoration:none;
+  }
+  .law-body .box-links a:hover{background:#d9f6f4;}
+  .law-body code{background:#e7f5f5;padding:1px 4px;border-radius:4px;font-size:11.5px;}
+  .law-body .law-item{margin-top:16px;padding-top:14px;border-top:1px dashed #cfe6e8;}
+  .law-body #lawFetched .law-item:first-child{margin-top:0;padding-top:0;border-top:0;}
+  .law-body .law-item>h4{margin:0 0 2px;}
+  .law-body .law-meta{margin:0 0 8px;font-size:11.5px;color:#7a9aa2;line-height:1.55;}
+  .law-body .art{margin-top:9px;}
+  .law-body .art>b{color:var(--deep-ocean);font-size:12.5px;}
+  .law-body pre.art-text{
+    white-space:pre-wrap;word-break:break-word;font-family:inherit;
+    font-size:12.5px;line-height:1.65;margin:4px 0 0;padding:10px 12px;
+    background:var(--paper-soft);border:1px solid #dbeef0;border-radius:8px;
+    max-height:340px;overflow:auto;
+  }
+  .law-body .att{margin-top:9px;font-size:12px;}
+  .law-body .att a{color:var(--ocean);font-weight:600;}
+  .law-body details.sub{margin-top:18px;border-top:1px dashed #cfe6e8;padding-top:12px;}
+  .law-body details.sub>summary{
+    cursor:pointer;list-style:none;font-weight:700;color:var(--deep-ocean);font-size:12.5px;
+  }
+  .law-body details.sub>summary::-webkit-details-marker{display:none;}
+  .law-body details.sub>summary::before{content:"▸ ";}
+  .law-body details.sub[open]>summary::before{content:"▾ ";}
+</style>
+</head>
+<body>
+
+<svg class="waves" viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0,80 C240,140 480,20 720,80 C960,140 1200,20 1440,80 L1440,200 L0,200 Z" fill="rgba(255,255,255,0.10)"></path>
+  <path d="M0,110 C240,170 480,50 720,110 C960,170 1200,50 1440,110 L1440,200 L0,200 Z" fill="rgba(255,255,255,0.16)"></path>
+</svg>
+
+<div class="container">
+  <header class="top">
+    <div class="badge">🌊 부산광역시 &nbsp;·&nbsp; ⚡ 전기자동차 보급사업 &nbsp;·&nbsp; 규칙 기반 (AI API 미사용)</div>
+    <h1>🍃 전기차 민원 답변 도우미</h1>
+    <p>민원 내용을 붙여넣으면 공고문·지침 문구를 조합해 답변 초안을 만들어 드립니다. 외부 AI 호출 없이 이 페이지 안에서만 동작합니다.</p>
+    <div class="stats">
+      <div class="stat"><span class="stat-num">16</span><span class="stat-label">판단 항목</span></div>
+      <div class="stat"><span class="stat-num">2</span><span class="stat-label">근거 문서</span></div>
+      <div class="stat"><span class="stat-num">0</span><span class="stat-label">외부 API 호출</span></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="col-left">
+      <div class="card">
+        <h2><span class="num">1</span> 민원 내용</h2>
+        <label for="complaint">민원인이 제기한 내용을 그대로 붙여넣으세요</label>
+        <textarea id="complaint" placeholder="예) 6월에 부산으로 전입했는데 전기차 보조금을 신청할 수 있나요? 청년 추가지원도 받을 수 있는지 궁금합니다."></textarea>
+        <button id="analyze">🔍 관련 항목 분석 및 답변 초안 생성</button>
+        <p class="hint">문장 안의 키워드(거주요건, 청년, 다자녀, 재지원제한, 의무운행, 신청기간 등)를 인식해 관련 항목을 자동으로 골라냅니다. 완벽하지 않을 수 있으니 아래 ②에서 항목을 직접 켜고 끌 수 있습니다.</p>
+      </div>
+    </div>
+
+    <div class="col-right">
+      <div class="card" id="preview-panel">
+        <h2><span class="num">✓</span> 이 도구가 판단하는 16개 항목</h2>
+        <p class="hint" style="margin-bottom:14px;">왼쪽에 민원 내용을 넣고 분석하면, 아래 항목 중 관련된 것을 자동으로 골라 답변에 포함합니다. 지금은 미리보기입니다.</p>
+        <div class="chips" id="previewChips"></div>
+      </div>
+
+      <div class="card" id="match-card">
+        <h2><span class="num">2</span> 감지된 항목 (클릭해서 포함/제외)</h2>
+        <div class="chips" id="chips"></div>
+        <div class="add-row">
+          <select id="addCategory"></select>
+          <button class="icon-btn" id="addBtn">+ 항목 추가</button>
+        </div>
+      </div>
+
+      <div class="card" id="output-card">
+        <h2><span class="num">3</span> 답변 초안 (직접 수정 가능)</h2>
+        <textarea id="output"></textarea>
+        <div class="output-actions">
+          <button class="icon-btn" id="copyBtn">📋 복사</button>
+        </div>
+        <a class="evor-link" href="https://www.ev.or.kr" target="_blank" rel="noopener">🔗 무공해차 통합누리집(ev.or.kr) 열기 — 차종별 정확한 보조금액 확인</a>
+        <div class="disclaimer">
+          ⚠️ 이 초안은 AI가 생성한 문장이 아니라, 아래 두 공고문·지침에서 미리 정리해 둔 문구를 규칙에 따라 조합한 것입니다. 차종별 정확한 보조금액과 최신 변경사항은 반드시 <b>무공해차 통합누리집(www.ev.or.kr)</b>에서 재확인하시고, 발송 전 담당자가 최종 검토해 주시기 바랍니다.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <details class="law-detail">
+    <summary>⚖️ 관련 법령 조문 원문 (펼쳐보기 · GitHub Actions 자동 수집)</summary>
+    <div class="law-body">
+      <div id="lawFetched" hidden></div>
+      <div id="lawManualSummary">
+      <div class="asof">
+        아래는 <b>조문 원문이 아니라 요약</b>입니다(<code>data/laws.json</code>이 없을 때 표시되는 대체 내용).
+        조회 시점: <b>2026-09-02</b>. 법률은 개정될 수 있으므로 실제 인용 시 아래 링크에서 <b>현행 조문을 반드시 재확인</b>하시기 바랍니다. 회수요율 등 구체적 수치는 「대기환경보전법 시행규칙」 별표 21의2 원문을 확인해야 합니다.
+      </div>
+
+      <h4>1. 「대기환경보전법」 제58조 (저공해자동차의 보급 등)</h4>
+      <ul>
+        <li>국가·지방자치단체는 저공해자동차(전기자동차 포함)의 보급을 촉진하기 위하여, 저공해자동차를 구매하는 자 등에게 예산의 범위에서 필요한 자금을 <b>보조하거나 융자</b>할 수 있습니다.</li>
+        <li>부산광역시가 지급하는 전기차 구매보조금(국비·시비)의 상위 근거 조항입니다.</li>
+        <li class="src">→ 세부 지원 기준·회수 등은 같은 법 시행규칙 제79조의4 및 별표에 위임되어 있습니다.</li>
+      </ul>
+
+      <h4>2. 「대기환경보전법 시행규칙」 제79조의4 (저공해자동차 등의 관리) — 의무운행기간·환수의 법적 근거</h4>
+      <ul>
+        <li>보조금을 지원받은 전기자동차는 최초 등록일부터 <b>의무운행기간(현행 8년, 96개월)</b> 동안 운행하여야 합니다. (종전 5년 → 8년으로 연장)</li>
+        <li>의무운행기간 내에 전기자동차를 <b>등록말소(폐차·수출말소)하거나 양도</b>하려는 경우, 관할 <b>시·도지사(부산광역시)의 사전 승인·신고</b>를 받아야 합니다.</li>
+        <li>의무운행기간을 채우지 못하고 말소·양도한 경우, <b>운행기간별 보조금 회수요율(「대기환경보전법 시행규칙」 별표 21의2)</b>에 따라 보조금이 환수됩니다. (예: 수출 목적 등록말소로서 사용기간 60개월 이상 96개월 미만이면 회수요율 20% 등 — 정확한 요율표는 별표 원문 확인)</li>
+        <li>전기자동차를 폐차하려는 경우 배터리는 시·도지사에게 반납하여야 합니다.</li>
+        <li class="src">→ 부산시 공고의 "8년 의무운행", "사전 승인", "운행기간별 환수요율"은 모두 이 조문에 근거합니다.</li>
+      </ul>
+
+      <h4>3. 「환경친화적 자동차의 개발 및 보급 촉진에 관한 법률」(친환경자동차법)</h4>
+      <ul>
+        <li><b>제2조(정의)</b>: "환경친화적 자동차"란 전기자동차, 수소전기자동차, 하이브리드자동차, 태양광자동차 등을 말합니다.</li>
+        <li><b>제10조(구매자 및 소유자에 대한 지원)</b>: 국가·지방자치단체는 환경친화적 자동차의 구매자 및 소유자에게 필요한 지원을 할 수 있으며, 시행령 제18조 등에 따라 일반 자동차와의 판매가격 차액의 전부 또는 일부를 보조할 수 있습니다.</li>
+        <li class="src">→ 차량 평가기준·보급목표 등 전국 공통 기준의 근거가 되는 법률입니다.</li>
+      </ul>
+
+      <div class="box-links">
+        <a href="https://www.law.go.kr/법령/환경친화적자동차의개발및보급촉진에관한법률" target="_blank" rel="noopener">친환경자동차법 현행 조문</a>
+        <a href="https://www.law.go.kr/법령/대기환경보전법" target="_blank" rel="noopener">대기환경보전법 현행 조문</a>
+        <a href="https://www.law.go.kr/법령/대기환경보전법시행규칙" target="_blank" rel="noopener">대기환경보전법 시행규칙 (제79조의4·별표 21의2)</a>
+      </div>
+      </div>
+    </div>
+  </details>
+
+  <footer class="note">
+    이 페이지는 인터넷 연결이나 외부 AI API 없이 브라우저에서만 동작합니다.<br/>
+    근거 문서: 부산광역시 공고 제2026-2121호(2026년 전기자동차 하반기 보급사업 공고),<br/>
+    기후에너지환경부 공고 제2026-5호(2026년 전기자동차 보급사업 보조금 업무처리지침)
+    <div class="law-links">
+      <a class="law-label" href="https://www.law.go.kr" target="_blank" rel="noopener">⚖️ 관련 법령 원문 (<span class="highlight">국가법령정보센터 law.go.kr — 현행 조문은 항상 아래에서 재확인)</span></a>
+      <a class="law-link" href="https://www.law.go.kr/법령/환경친화적자동차의개발및보급촉진에관한법률" target="_blank" rel="noopener">환경친화적 자동차의 개발 및 보급 촉진에 관한 법률</a>
+      <a class="law-link" href="https://www.law.go.kr/법령/대기환경보전법시행규칙" target="_blank" rel="noopener">대기환경보전법 시행규칙 (제79조의4 · 의무운행기간·환수율)</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* ===== 지식베이스: 부산시 공고(제2026-2121호) + 기후부 지침(제2026-5호) 요약 ===== */
+const KB = [
+  {
+    id: "residence",
+    label: "거주요건/신청자격",
+    keywords: ["거주","전입","이사","주소","거주요건","거주기간","이주","살고"],
+    body: "귀하께서는 전기자동차 구매보조금 신청일로부터 60일 전(최근 전입일 기준)부터 연속하여 부산광역시에 주소를 두고 계셔야 신청 자격이 인정됩니다(공동명의자도 동일 요건 적용). 개인사업자는 사업장 소재지, 법인은 본사·지사·공장·자동차대여사업소 등이 부산광역시 내에 있어야 하며, 개인택시 등 개인영업용 차량은 사용본거지를 기준으로 판단합니다. 직업군인 등 불가피한 사유로 거주기간 요건을 충족하기 어려운 경우에는 이를 증빙하여 예외를 인정받을 수 있습니다."
+  },
+  {
+    id: "youth",
+    label: "청년(부산청년 EV드림)",
+    keywords: ["청년","ev드림","생애 첫","생애첫차","생애최초","취업","창업","출산"],
+    body: "「청년기본법」 제3조에 따른 만 19세 이상 34세 이하 청년(출산 청년은 나이 제한 없음)이 부산광역시에 60일 이상 연속 거주하며 전기승용차 또는 전기화물차를 구매하는 경우, '부산청년 EV드림' 사업을 통해 최대 200만 원(제작사 지원 50만 원 포함)까지 추가 지원을 받으실 수 있습니다. 지원 유형은 ① 생애 첫차 구매(100만 원), ② '25.1월 이후 출산(150만 원, 부모 한정), ③ 부산기업 취업 6개월 이상 재직(150만 원), ④ 부산 창업 6개월 이상 영업(화물, 150만 원), ⑤ 장애우 청년(200만 원)으로 구분되며 중복 지원되지 않습니다. 이 지원은 '지역할인제' 참여 차량에 한하여 적용되며, 총 478명 한정으로 예산 소진 시 조기 마감될 수 있습니다."
+  },
+  {
+    id: "multichild",
+    label: "다자녀가구",
+    keywords: ["다자녀","자녀","셋째","넷째","둘째"],
+    body: "18세 이하 자녀 2명 이상을 둔 다자녀가구가 개인 명의로 전기승용차(중·대형, 소형)를 구매하는 경우, 자녀 수에 따라 2자녀 100만 원, 3자녀 200만 원, 4자녀 이상 300만 원의 추가 보조금을 지원받으실 수 있습니다(개인사업자·법인 및 자녀 명의 구매는 제외). 이는 기후에너지환경부 「2026년 전기자동차 보급사업 보조금 업무처리지침」에 따른 전국 공통 기준입니다."
+  },
+  {
+    id: "vulnerable",
+    label: "취약계층/우선순위",
+    keywords: ["차상위","기초생활","장애인","독립유공자","상이유공자","우선순위","취약계층","연금","생애최초"],
+    body: "장애인, 차상위 이하 계층, 상이·독립유공자, 소상공인, 다자녀가구, 생애최초 구매자, 노후경유차를 폐차하고 전기차로 대체하려는 분 등에게는 보조금 지원 우선순위가 부여됩니다. 차상위 이하 계층에 해당하는 개인이 승용차를 구매하는 경우 국비 지원액의 20%가 추가 지원됩니다. 다만 차량가액에 따라 기초연금, 장애인연금 수급대상 또는 임대주택 입주자격 등에서 제외될 수 있으므로, 신청 전 관련 기관(주소지 구·군 또는 동 주민센터)에 반드시 확인하시기 바랍니다."
+  },
+  {
+    id: "smallbiz",
+    label: "소상공인/농업인/택배",
+    keywords: ["소상공인","농업인","택배","화물차 추가","운송사업","배달"],
+    body: "화물차(소형·경형·초소형)를 구매하는 소상공인 또는 차상위 이하 계층에 해당하는 개인은 국비 지원액의 30%를, 농업인 확인서 또는 농업경영체 등록확인서를 제출하는 농업인은 국비 지원액의 10%를 추가로 지원받으실 수 있습니다. 「화물자동차법」 제2조제3호에 따른 집화·분류·배송 운송사업(택배용 차량)으로 구매하시는 경우에도 국비 지원액의 10%가 추가 지원됩니다."
+  },
+  {
+    id: "taxi",
+    label: "전기택시",
+    keywords: ["택시","전기택시"],
+    body: "구매자가 택시사업자면허를 소지한 경우 해당 차량 보조금에 250만 원이 추가 지원되며, 택시법인의 경우 중소기업이 구매하는 경우에 한하여 추가 지원됩니다. 지역별 이동여건을 고려하여 법인(중소기업 한정)의 전기택시 구매에 대해서는 재지원 제한기간 적용 없이 지자체 보조가 가능합니다."
+  },
+  {
+    id: "repurchase_limit",
+    label: "재지원 제한기간",
+    keywords: ["재지원","2대 이상","2대를","중복 구매","다시 구매","재구매","재구매 제한","제한기간","여러 대","두 대째","한 대 더","또 사려"],
+    body: "전기승용·전기화물·전기승합차는 재지원 제한기간(2년) 내에 개인이 2대 이상의 동일 차종을 구매하는 경우, 해당 기간 내 최초 구매 차량 1대를 제외하고는 보조금이 지원되지 않습니다. 이 재지원 제한기간은 2026년 지침 시행 이전 구매지원 건에 대해서도 동일하게 적용됩니다. 다만 법인(중소기업 한정)의 전기택시, 초소형 승용·화물차, 승합(법인·개인사업자), 어린이통학승합(법인) 구매나 노후경유차 조기폐차(1건당 1회) 시에는 재지원 제한기간이 적용되지 않으며, 교통사고나 천재지변 등 불가피한 사유로 보조금을 지원받아 구매한 전기차를 폐차한 경우에도 재지원 제한기간과 무관하게 지원이 가능합니다."
+  },
+  {
+    id: "old_diesel",
+    label: "노후경유차 폐차/내연기관 교체",
+    keywords: ["노후 경유","경유차 폐차","조기폐차","전환지원","내연기관 교체","경유화물","경유차"],
+    body: "기존에 보유하던 노후 경유화물차를 조기폐차(2023년 지침 시행일 이후 폐차분에 한함)하고 전기화물차를 구매하시는 경우, 폐차 1건당 1회에 한하여 재지원 제한기간이 적용되지 않습니다. 또한 최초등록 3년이 경과한 내연기관차(하이브리드 제외)를 3년 이상 보유하다가 판매 또는 폐차하고 개인이 전기차(승용 중·대형·소형, 화물 소·경형)를 구매하는 경우에는 전환지원금으로 국비 100만 원 이내(차종별 국비 보조금 산정 수준에 비례하여 차등 산정, 부산시는 시비 포함 최대 130만 원)가 추가 지원됩니다. 다만 가족(배우자, 직계존비속 등) 간 차량 증여·판매의 경우에는 전환지원금이 지원되지 않으며, 위반 시 환수될 수 있습니다."
+  },
+  {
+    id: "mandatory_operation",
+    label: "의무운행기간/환수",
+    keywords: ["의무운행","말소","폐차 승인","양도","환수","되팔","수출","팔","팔고","판매","전출","이전등록"],
+    body: "보조금을 지원받은 전기자동차는 「대기환경보전법 시행규칙」 제79조의4에 따라 최초등록일로부터 8년간 부산시 내에서 의무운행하여야 합니다. 의무운행기간 내 등록말소(폐차·수출말소) 또는 양도를 하시려는 경우에는 반드시 부산광역시(탄소중립정책과)의 사전 승인을 받으셔야 하며, 승인 없이 처리하실 경우 운행기간별 환수요율(예: 사용 6개월 미만 70%, 24개월 이상 30개월 미만 40% 등)에 따라 보조금이 환수될 수 있습니다. 최초등록 2년 이후에는 승인 없이 양도가 가능하며, 2년 이내 타 지자체로 전출하는 경우 보조금은 환수되지 않습니다(법인은 사용본거지 변경 시 환수). 전기화물차의 경우 2만km 이상 운행하지 않고 2년 이내 판매하면 지급된 보조금의 30% 이상이 별도로 환수됨을 유의하시기 바랍니다."
+  },
+  {
+    id: "local_discount",
+    label: "지역할인제",
+    keywords: ["지역할인","제조사 할인","할인제","할인"],
+    body: "지역할인제에 참여하는 제작·수입사의 전기승용·화물차를 구매하시는 경우, 제작·수입사 할인 최대 30만 원과 부산시 추가 보조금 최대 30만 원을 합하여 최대 60만 원의 혜택을 받으실 수 있습니다. 2026년 하반기 지역할인제는 승용·화물 2,000대 한도로 운영되며 예산 소진 시 조기 마감됩니다. 참여 제작·수입사 목록은 부산광역시 홈페이지 고시공고 「2026년 전기자동차 지역할인제 참여업체 모집 공고」를 참고하시기 바랍니다."
+  },
+  {
+    id: "period",
+    label: "신청기간/접수",
+    keywords: ["신청기간","접수","언제부터","마감","신청일","언제"],
+    body: "2026년 하반기 전기자동차 보급사업은 전기화물·승합·어린이통학차의 경우 2026. 7. 8.(수) 10:00부터, 전기승용차의 경우 2026. 7. 13.(월) 10:00부터 각각 신청 접수가 시작되며, 예산 소진 시 신청이 조기 마감됩니다(보급기간은 원칙적으로 2026. 12. 11.까지). 접수 순서와 관계없이 차량의 출고·등록순으로 보조금이 지급되므로, 신청서 접수만으로 지원 순위가 확정되는 것은 아님을 안내드립니다."
+  },
+  {
+    id: "budget_exhausted",
+    label: "예산소진/조기마감 이후 대응",
+    keywords: ["조기마감","조기 마감","예산 소진","예산소진","추가 물량","물량 확보","마감되어","마감된 후","잔여물량","잔여 물량"],
+    body: "말씀하신 대로 2026년 하반기 보급사업은 예산 소진 시 신청이 조기 마감되며, 접수 순서와 무관하게 차량의 출고·등록순으로 보조금이 지급됩니다. 다만 다음 두 가지 보완 절차를 참고하실 수 있습니다. 첫째, 택시·택배·우선지원 대상 등에서 발생한 미집행 잔여물량은 2026. 10. 1.부터 통합하여 집행되므로, 이후 추가 지원 가능성이 있습니다. 둘째, 전기승용차(중·대형·소형) 및 전기화물차(소·경형)를 개인이 구매하시는 경우, 2026년 9월 이후 부산시 예산이 소진되면 한국환경공단(국비 지원사업)에 별도로 신청하실 수 있습니다(이 경우 국비만 지원되며 재지원 제한기간 2년이 적용됨). 현재 시점('26.8월 기준)에는 이 국비 경로가 아직 개시되지 않았으므로, 9월 이후 신청 가능 여부를 다시 확인하여 주시기 바랍니다. 그 외 개별적인 추가 물량 확보나 우선 처리 요청은 예산 상황에 따라 탄소중립정책과에서 검토할 사항이므로, 구체적인 가능 여부는 담당 부서로 문의하여 주시기 바랍니다."
+  },
+  {
+    id: "method",
+    label: "신청방법/제출서류",
+    keywords: ["신청방법","어떻게 신청","제출서류","서류","구비서류"],
+    body: "전기자동차 구매보조금은 무공해차 통합누리집(www.ev.or.kr)을 통해 신청하실 수 있으며, 구매자가 자동차 제작·수입사와 구매계약을 체결한 후 구매 지원신청서 및 첨부서류(전기자동차 구매계약서, 지방세납세증명서, 세외수입 체납여부 확인서 등, 개인의 경우 주민등록등본·초본)를 제작·수입사를 통해 제출하시면 됩니다. 우선순위 대상자에 해당하는 경우 관련 증빙서류(차상위증명서, 가족관계증명서, 소상공인확인서 등)를 함께 제출하셔야 하며, 모든 증빙서류는 신청일 기준 30일 이내 발급된 것이어야 합니다."
+  },
+  {
+    id: "amount",
+    label: "보조금 금액 문의",
+    keywords: ["보조금 얼마","지원금액","보조금액","얼마나","금액","얼마"],
+    body: "전기자동차 구매보조금은 차종(승용·화물·승합 및 규격)과 차량 성능, 배터리 효율 등에 따라 차등 지급되며, 국비와 지방비(부산시)를 합산하여 지급됩니다(부산시는 지급되는 국비 보조금의 최소 30% 이상 지방비를 편성). 예를 들어 전기승용차(중·대형)는 국비 최대 580만 원, 전기화물차(중형)는 국비 최대 4,000만 원 범위 내에서 산정되며 부산시 시비가 비례하여 추가됩니다. 다만 정확한 차종별·모델별 최종 보조금액은 매월 갱신되므로, 반드시 무공해차 통합누리집(www.ev.or.kr → 구매 및 지원 → 구매보조금 지급현황 → 지자체 차종별 보조금)에서 확인하시기 바랍니다."
+  },
+  {
+    id: "co_owner",
+    label: "공동명의 구매",
+    keywords: ["공동명의","공동구매","부부 공동"],
+    body: "1대의 차량을 공동명의로 구매하시는 복수의 구매자에 대해 보조금을 지원하는 경우, 해당 구매자 중 대표자 1인에게만 보조금이 지원되는 것으로 간주되며, 재지원 제한기간 역시 대표자 1인에게만 적용됩니다."
+  },
+  {
+    id: "exclusion",
+    label: "지원 제외/부정수급",
+    keywords: ["부정수급","위장전입","환수 대상","제외 대상","거짓"],
+    body: "전기자동차 제작·수입사가 자사 차량을 구매하는 경우(단, K-EV100 참여 제작·수입사 및 리스·렌트용 구매는 제외), 중앙행정기관이 구매하는 경우, 자동차 등록말소 이력이 있는 차량을 구매하는 경우에는 보조금 지원 대상에서 제외됩니다. 또한 위장전입 등 거짓이나 부정한 방법으로 보조금을 신청하여 지급받은 사실이 확인되는 경우에는 국비·지방비·이자를 포함하여 보조금 전액이 환수됨을 유의하시기 바랍니다."
+  },
+  {
+    id: "generic",
+    label: "일반 안내(기본 포함)",
+    keywords: [],
+    body: "문의해 주신 사항은 아래 근거 문서를 바탕으로 검토하였으며, 공고문 및 신청서식 등에 예시되지 않은 세부 사례에 대한 최종 해석은 부산광역시 탄소중립정책과의 의견에 따름을 안내드립니다."
+  }
+];
+
+const GREETING = "안녕하십니까. 부산광역시 전기자동차 보급사업과 관련하여 문의해 주신 데 대해 감사드리며, 아래와 같이 안내드립니다.\n";
+const FOOTER_NOTICE = "\n본 안내는 부산광역시 공고 제2026-2121호(2026년 전기자동차 하반기 보급사업 공고) 및 기후에너지환경부 공고 제2026-5호(2026년 전기자동차 보급사업 보조금 업무처리지침)를 근거로 작성되었습니다. 차종별 정확한 보조금 지원금액 및 최신 변경사항은 무공해차 통합누리집(www.ev.or.kr)에서 반드시 재확인하여 주시기 바랍니다.\n\n문의처 : 부산광역시 환경물정책실 탄소중립정책과 (☎ 051-888-3557)\n전기자동차 통합콜센터(한국환경공단)\n\n추가로 궁금하신 사항이 있으시면 언제든지 문의하여 주시기 바랍니다. 감사합니다.";
+
+const complaintEl = document.getElementById("complaint");
+const analyzeBtn = document.getElementById("analyze");
+const previewPanel = document.getElementById("preview-panel");
+const previewChipsEl = document.getElementById("previewChips");
+const matchCard = document.getElementById("match-card");
+const chipsEl = document.getElementById("chips");
+const addSelect = document.getElementById("addCategory");
+const addBtn = document.getElementById("addBtn");
+const outputCard = document.getElementById("output-card");
+const outputEl = document.getElementById("output");
+const copyBtn = document.getElementById("copyBtn");
+
+let selectedIds = [];
+let lastComplaintText = "";
+
+previewChipsEl.innerHTML = KB.filter(c => c.id !== "generic")
+  .map(c => `<span class="chip chip-preview">${c.label}</span>`).join("");
+
+function summarizeComplaint(text){
+  // 진짜 AI 요약이 아니라, 문장 단위로 앞부분을 추출하는 규칙 기반 방식입니다.
+  const sentences = text
+    .split(/(?<=[.?!])\s+|\n+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+  let summary = sentences.slice(0, 2).join(" ");
+  if (!summary) summary = text.trim();
+  if (summary.length > 120) summary = summary.slice(0, 120).trim() + "…";
+  return summary;
+}
+
+function matchCategories(text){
+  const t = text.toLowerCase();
+  const scored = KB.filter(c => c.id !== "generic").map(c => {
+    const score = c.keywords.reduce((n, kw) => n + (t.includes(kw.toLowerCase()) ? 1 : 0), 0);
+    return { id: c.id, score };
+  }).filter(c => c.score > 0).sort((a,b) => b.score - a.score);
+  return scored.map(c => c.id);
+}
+
+function findKB(id){ return KB.find(c => c.id === id); }
+
+function renderChips(){
+  chipsEl.innerHTML = "";
+  selectedIds.forEach(id => {
+    const kb = findKB(id);
+    if (!kb) return;
+    const label = document.createElement("label");
+    label.className = "chip";
+    label.innerHTML = `<input type="checkbox" checked data-id="${id}"/> ${kb.label}`;
+    const input = label.querySelector("input");
+    input.addEventListener("change", () => {
+      label.classList.toggle("unchecked", !input.checked);
+      generateOutput();
+    });
+    chipsEl.appendChild(label);
+  });
+  renderAddOptions();
+}
+
+function renderAddOptions(){
+  const remaining = KB.filter(c => c.id !== "generic" && !selectedIds.includes(c.id));
+  addSelect.innerHTML = remaining.length
+    ? remaining.map(c => `<option value="${c.id}">${c.label}</option>`).join("")
+    : `<option value="">추가할 항목 없음</option>`;
+}
+
+addBtn.addEventListener("click", () => {
+  const id = addSelect.value;
+  if (!id) return;
+  if (!selectedIds.includes(id)) {
+    selectedIds.push(id);
+    renderChips();
+    generateOutput();
+  }
+});
+
+function generateOutput(){
+  const checked = Array.from(chipsEl.querySelectorAll("input[type=checkbox]:checked")).map(el => el.dataset.id);
+  const generic = findKB("generic");
+  const bodies = [generic.body, ...checked.map(id => findKB(id).body)];
+
+  const summarySentence = summarizeComplaint(lastComplaintText);
+  const categoryLabels = checked.map(id => findKB(id).label);
+  let summaryLine = `【민원 요지】 ${summarySentence}`;
+  if (categoryLabels.length) summaryLine += `  (관련 항목: ${categoryLabels.join(", ")})`;
+
+  const text = GREETING + "\n" + summaryLine + "\n\n" + bodies.join("\n\n") + "\n" + FOOTER_NOTICE;
+  outputEl.value = text;
+  outputCard.classList.add("show");
+}
+
+analyzeBtn.addEventListener("click", () => {
+  const text = complaintEl.value.trim();
+  if (!text) {
+    alert("민원 내용을 입력해 주세요.");
+    return;
+  }
+  lastComplaintText = text;
+  selectedIds = matchCategories(text);
+  previewPanel.classList.add("hide");
+  matchCard.classList.add("show");
+  renderChips();
+  generateOutput();
+  matchCard.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+copyBtn.addEventListener("click", () => {
+  navigator.clipboard.writeText(outputEl.value).then(() => {
+    const original = copyBtn.textContent;
+    copyBtn.textContent = "✅ 복사됨";
+    setTimeout(() => { copyBtn.textContent = original; }, 1500);
+  });
+});
+
+/* ===== data/laws.json (GitHub Actions가 law.go.kr에서 미리 받아 저장한 조문) 표시 =====
+   같은 도메인의 정적 파일만 읽으며, 실행 중 외부 API를 호출하지 않는다.
+   파일이 없거나(file:// 로컬 열람 등) 실패하면 위의 '담당자 정리 요약'이 그대로 노출된다. */
+(function(){
+  const target = document.getElementById("lawFetched");
+  if (!target || !window.fetch) return;
+
+  fetch("data/laws.json", { cache: "no-cache" })
+    .then(r => { if (!r.ok) throw new Error("no file"); return r.json(); })
+    .then(data => {
+      if (!data || !Array.isArray(data.laws) || !data.laws.length) throw new Error("bad json");
+      renderLaws(target, data);
+      demoteManualSummary();
+    })
+    .catch(() => { /* 대체 요약 유지 */ });
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"]/g, c => (
+      { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]
+    ));
+  }
+  function ymd(s){
+    s = String(s || "");
+    return s.length === 8 ? s.slice(0,4) + "." + s.slice(4,6) + "." + s.slice(6,8) : s;
+  }
+
+  function renderLaws(el, data){
+    const when = (data.fetchedAt || "").slice(0, 10);
+    let html =
+      '<div class="asof">✅ 아래는 <b>GitHub Actions</b>가 국가법령정보센터(law.go.kr Open API)에서 미리 내려받아 저장소에 저장한 <b>현행 조문 원문</b>입니다. ' +
+      '수집일 <b>' + esc(when) + '</b>. 이 페이지는 같은 도메인의 <code>data/laws.json</code>만 읽으며 실행 중 외부 API를 호출하지 않습니다. ' +
+      '개정 가능성이 있으므로 인용 전 각 항목의 law.go.kr 링크에서 재확인하시기 바랍니다.</div>';
+
+    data.laws.forEach(law => {
+      html += '<div class="law-item"><h4>「' + esc(law.name) + '」</h4>';
+      const meta = [];
+      if (law.enforceDate) meta.push("시행 " + esc(ymd(law.enforceDate)));
+      if (law.ministry) meta.push(esc(law.ministry));
+      if (law.department) meta.push(esc(law.department) + (law.phone ? " " + esc(law.phone) : ""));
+      html += '<p class="law-meta">' + meta.join(" · ") + (law.note ? (meta.length ? "<br>" : "") + esc(law.note) : "") + '</p>';
+
+      if (law.error){
+        html += '<p class="law-meta">⚠ 자동 수집 실패: ' + esc(law.error) + ' — 아래 “담당자 정리 요약”을 참고하세요.</p>';
+      }
+      (law.articles || []).forEach(a => {
+        html += '<div class="art"><b>' + esc(a.no) + (a.title ? " (" + esc(a.title) + ")" : "") + '</b>' +
+                '<pre class="art-text">' + esc(a.text) + '</pre></div>';
+      });
+      (law.attachments || []).forEach(b => {
+        html += '<div class="att">📎 <b>' + esc(b.no) + '</b> ' + esc(b.title || "");
+        if (b.pdf) html += ' — <a href="' + esc(b.pdf) + '" target="_blank" rel="noopener">표 원문(PDF)</a>';
+        if (b.text) html += '<pre class="art-text">' + esc(b.text) + '</pre>';
+        html += '</div>';
+      });
+      if (law.link){
+        html += '<p class="att"><a href="' + esc(law.link) + '" target="_blank" rel="noopener">law.go.kr에서 전문 보기</a></p>';
+      }
+      html += '</div>';
+    });
+
+    if (Array.isArray(data.warnings) && data.warnings.length){
+      html += '<p class="law-meta">수집 경고: ' + esc(data.warnings.join(" / ")) + '</p>';
+    }
+    el.innerHTML = html;
+    el.hidden = false;
+  }
+
+  function demoteManualSummary(){
+    const man = document.getElementById("lawManualSummary");
+    if (!man || man.dataset.demoted) return;
+    man.dataset.demoted = "1";
+    const d = document.createElement("details");
+    d.className = "sub";
+    d.innerHTML = "<summary>담당자 정리 요약 (수기 · 참고용)</summary>";
+    man.parentNode.insertBefore(d, man);
+    d.appendChild(man);
+  }
+})();
+</script>
+</body>
+</html>

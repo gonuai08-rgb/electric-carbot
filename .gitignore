@@ -1,0 +1,14 @@
+# 의존성
+node_modules/
+
+# Firebase 배포 캐시·로그
+.firebase/
+firebase-debug.log
+*-debug.log
+
+# Claude Code 로컬 설정
+.claude/settings.local.json
+
+# OS
+.DS_Store
+Thumbs.db
