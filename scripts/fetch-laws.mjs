@@ -75,17 +75,31 @@ function tidyOrdinText(s) {
     .trim();
 }
 
-async function getJson(url) {
-  const res = await fetch(url, {
-    headers: { 'User-Agent': UA, Referer: 'https://www.law.go.kr/' },
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}\n${text.slice(0, 300)}`);
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(`JSON 아님 — ${url}\n${text.slice(0, 300)}`);
+async function getJson(url, tries = 4) {
+  let lastErr;
+  for (let i = 1; i <= tries; i++) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': UA, Referer: 'https://www.law.go.kr/' },
+        signal: AbortSignal.timeout(20000),
+      });
+      const text = await res.text();
+      if (!res.ok) throw new Error(`HTTP ${res.status} — ${text.slice(0, 200)}`);
+      try {
+        return JSON.parse(text);
+      } catch {
+        throw new Error(`JSON 아님 — ${text.slice(0, 200)}`);
+      }
+    } catch (e) {
+      lastErr = e;
+      if (i < tries) {
+        const wait = 1500 * i;
+        console.warn(`    재시도 ${i}/${tries - 1} (${e.message?.split('\n')[0]}) — ${wait}ms 대기`);
+        await sleep(wait);
+      }
+    }
   }
+  throw lastErr;
 }
 
 /* ---------------------------------------------------------------- 검색 */
@@ -297,6 +311,38 @@ async function main() {
     }
   }
 
+  // 이전 저장본 로드 (실패한 법령은 이전 좋은 데이터로 대체)
+  let prev = null;
+  try {
+    prev = JSON.parse(await readFile(OUT_PATHS[0], 'utf8'));
+  } catch {
+    /* 최초 실행 */
+  }
+  const prevGood = new Map(
+    (prev?.laws ?? [])
+      .filter((l) => !l.error && Array.isArray(l.articles) && l.articles.length)
+      .map((l) => [l.name, l])
+  );
+
+  const merged = laws.map((l) => {
+    if (l.error && prevGood.has(l.name)) {
+      warnings.push(`이번 수집 실패 → 이전 저장본 유지: "${l.name}"`);
+      console.warn(`  ↺ ${l.name}: 이전 데이터 유지`);
+      return { ...prevGood.get(l.name), note: l.note || prevGood.get(l.name).note, staleFromPrevious: true };
+    }
+    return l;
+  });
+
+  const freshOk = laws.filter((l) => !l.error).length;
+  const usableOk = merged.filter((l) => !l.error).length;
+
+  // 새로 받은 것도 없고 이전 저장본도 없으면 실패로 종료(워크플로가 빨갛게 뜨도록).
+  if (usableOk === 0) {
+    console.error('\n수집·이전본 모두 사용할 수 없습니다. 파일을 건드리지 않고 실패 처리합니다.');
+    for (const w of warnings) console.error('  - ' + w);
+    process.exit(1);
+  }
+
   const out = {
     fetchedAt: new Date().toISOString(),
     source: '국가법령정보센터 Open API (law.go.kr / DRF)',
@@ -306,23 +352,13 @@ async function main() {
       '웹페이지는 같은 도메인에서 이 파일만 읽으며 실행 중 외부 API를 호출하지 않습니다. ' +
       '법령은 개정될 수 있으므로 인용 전 law.go.kr 원문을 재확인하십시오.',
     warnings,
-    laws,
+    laws: merged,
   };
 
-  // 실제 내용(laws·warnings)이 그대로면 fetchedAt만 바뀌어 무의미한 커밋이 생기므로 저장을 건너뛴다.
-  const substantive = JSON.stringify({ warnings: out.warnings, laws: out.laws });
-  let prev = null;
-  try {
-    prev = JSON.parse(await readFile(OUT_PATHS[0], 'utf8'));
-  } catch {
-    /* 최초 실행 */
-  }
-  if (prev && JSON.stringify({ warnings: prev.warnings ?? [], laws: prev.laws ?? [] }) === substantive) {
-    console.log('\n내용 변화 없음 — 파일을 갱신하지 않습니다.');
-    if (warnings.length) {
-      console.log('경고:');
-      for (const w of warnings) console.log('  - ' + w);
-    }
+  // laws 내용이 이전과 같으면(= fetchedAt만 변경) 무의미한 커밋을 피하려고 저장을 건너뛴다.
+  if (prev && JSON.stringify(prev.laws ?? []) === JSON.stringify(merged)) {
+    console.log(`\n내용 변화 없음 — 파일을 갱신하지 않습니다. (신규수집 ${freshOk}/${laws.length})`);
+    if (warnings.length) for (const w of warnings) console.log('  - ' + w);
     return;
   }
 
@@ -337,8 +373,7 @@ async function main() {
     console.log('\n경고:');
     for (const w of warnings) console.log('  - ' + w);
   }
-  const ok = laws.filter((l) => !l.error).length;
-  console.log(`\n완료: ${ok}/${laws.length} 법령 수집`);
+  console.log(`\n완료: 신규수집 ${freshOk}/${laws.length}, 사용가능 ${usableOk}/${laws.length}`);
 }
 
 main().catch((e) => {
