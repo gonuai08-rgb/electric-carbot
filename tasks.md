@@ -41,7 +41,7 @@
 - [x] 워크플로 1회 실행해 동작 확인 — push 트리거 success, `laws.json` 자동 커밋(`0f6afcd`) 확인
 - [x] 동시 실행 레이스 대응 — 커밋 단계 `git pull --rebase` + 3회 재시도
 - [x] law.go.kr 해외 IP 간헐 차단 대응 — 요청 4회 재시도, 실패 시 이전 저장본 유지, 전멸 시 exit 1
-- [ ] **`firebase deploy --only hosting`** — 사용자 실행 (공개 사이트에 법령 로더 + laws.json 반영)
-- [ ] 배포 후 electronic-carbot.web.app 하단 법령 조문 표시 육안 확인
+- [x] 사이트 주소 변경 + 배포(2026-09-02) — `firebase.json` site=`hello-carbot`, 사이트 생성 후 `firebase deploy --only hosting`. **새 주소 https://hello-carbot.web.app** (배포 검증 완료: index.html 로더 + laws.json 5법령/26조문 200)
+- [ ] 옛 주소 `electronic-carbot.web.app`(2026-08-05 버전 동결) 처리 방침 결정 — 방치 / 최신본 배포 / 리다이렉트
 - [ ] (선택) open.law.go.kr 전용 OC 키 발급 → Secret `LAW_OC` 등록 (안 하면 공용키 `test`)
 - [ ] 별표 21의2 표 텍스트 가독성 확인 (정렬 깨지면 PDF 링크만 노출로 조정)

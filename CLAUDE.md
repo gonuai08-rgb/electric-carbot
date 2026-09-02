@@ -8,7 +8,7 @@
 2. ✅ CLAUDE.md 규칙 수립
 3. ✅ `index.html` 제작 — API 없이 규칙 기반(키워드 매칭 16개 항목) 답변 생성기, 민원 요지 자동 추출 포함(v3)
 4. 🔶 매칭 정확도 검증 및 키워드/콘텐츠 보완 — 가상 시나리오 9건 + 실제 민원 2건 검증·보완 완료(2026-08-05), **더 많은 실제 민원 원문 검증은 계속 필요**
-5. ✅ 배포 완료(2026-08-05) — Claude Artifact(비공개): https://claude.ai/code/artifact/ae1800f9-cd98-4fa7-a33b-51f3788302f7 / **Firebase Hosting(공개): https://electronic-carbot.web.app**
+5. ✅ 배포 완료 — Claude Artifact(비공개): https://claude.ai/code/artifact/ae1800f9-cd98-4fa7-a33b-51f3788302f7 / **Firebase Hosting(공개): https://hello-carbot.web.app** (2026-09-02 이 주소로 변경, Firebase 프로젝트는 `electronic-carbot` 유지). 옛 주소 `electronic-carbot.web.app`는 2026-08-05 버전으로 동결됨(앞으로 배포는 `hello-carbot`으로만). GitHub 저장소: https://github.com/gonuai08-rgb/electric-carbot
 6. ✅ 레이아웃 디자인 개선(v4, 2026-08-05) — 2단 그리드, 16개 항목 미리보기, 스탯 타일 반영 후 재배포
 7. ✅ 법령 원문(law.go.kr) 참고 링크 추가 및 스타일 다듬기(2026-08-05) — 친환경자동차법·대기환경보전법 시행규칙 제79조의4
 8. 🔶 UI 세부 다듬기 진행 중 — 검정색으로 바꾼 법령 강조 문구가 배경과 대비가 약할 수 있어 사용자 재확인 대기
